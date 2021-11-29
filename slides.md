@@ -54,19 +54,23 @@ JavaScript从诞生之日起就是一门单线程的非阻塞的脚本语言.
 <br/>
 
 <div v-click="2">
-试想一下多线程，那么当两个线程同时对dom进行一项操作，例如一个向其添加事件，而另一个删除了这个dom，此时该如何处理呢？因此，为了保证不会 发生类似于这个例子中的情景，JavaScript选择只用一个主线程来执行代码，这样就保证了程序执行的一致性。<br/>
+试想一下多线程，那么当两个线程同时对dom进行一项操作，例如一个向其添加事件，而另一个删除了这个dom，此时该如何处理呢？因此，为了保证不会发生类似于这个例子中的情景，JavaScript选择只用一个主线程来执行代码，这样就保证了程序执行的一致性。<br/>
 </div>
 
-<br/>
-
 <v-click at="3">
+
+为了更好地理解 JavaScript 的单线程非阻塞，让我们来设计一个单线程的语言吧
+
+</v-click>
+
+---
+
 ```mermaid {theme: 'neutral', scale: 0.8}
 flowchart LR
     开始线程 --> 任务一 --> 任务二 --> 任务三 --> 任务四 --> 结束线程
 ```
-</v-click>
 
-<v-click at="4">
+<v-click at="1">
 
 ```go
 package main
@@ -81,8 +85,8 @@ func main() {
 
 </v-click>
 
-<arrow v-click="5" x1="200" y1="360" x2="320" y2="266" color="#564" width="3" arrowSize="1" />
-<div v-click="5" class="fixed top-80 left-60"><span class="text-3xl">?</span>如何插入一个任务</div>
+<arrow v-click="2" x1="200" y1="160" x2="320" y2="70" color="#564" width="3" arrowSize="1" />
+<div v-click="2" class="fixed top-30 left-60"><span class="text-3xl">?</span>如何插入一个任务</div>
 
 ---
 
@@ -285,26 +289,39 @@ setTimeout(() => {
 
 # 微任务
 
-在刚才提到的 [WHATWG](https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint) 规范中，我们可以知道**微任务就是一个需要异步执行的函数，执行时机是在主函数执行结束之后、当前宏任务结束之前。**
+在刚才提到的 [WHATWG](https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint) 规范中，我们可以知道**微任务就是一个需要异步执行的函数，执行时机是在主函数执行结束之后、当前宏任务结束之前。**，如果在执行微任务过程中产生了新的微任务，v8引擎会将该微任务添加到微任务队列中，循环往复，直到队列为空才算结束
 
 <v-click at="1">
-
-微任务检查点的执行
-- 将 perform a microtask checkpoint 设置为 true
-- 如果 microtask queue 非空
-  - 微任务队列出队 oldestMicrotask 
-  - 当前事件循环执行的任务中执行 oldestMicrotask
-  - 再次执行微任务检查点
-  - 将事件循环当前运行的任务设置为空。
-- 将 perform a microtask checkpoint 设置为 false
-
-</v-click>
-
-<v-click at="2">
 
 现代浏览器中主要有 MutationObserver， Promise，queueMicrotask 产生微任务
 
 </v-click>
+
+---
+
+```js {all|17-21|2-7|10-15|4-6|12-14}
+function microTask1() {
+  queueMicrotask(() => {
+    console.log('1');
+    queueMicrotask(() => {
+      console.log('3');
+    })
+  })
+}
+function microTask2() {
+  queueMicrotask(() => {
+    console.log('2');
+    queueMicrotask(() => {
+      console.log('4');
+    })
+  })
+}
+queueMicrotask(() => {
+  console.log(0);
+  microTask1();
+  microTask2();
+})
+```
 
 ---
 
@@ -391,11 +408,151 @@ new Promise(resolve => {
 
 ---
 
-async await
+# async await
+
+虽然使用Promise让代码执行流程已经线性化了，但是代码里面包含了大量的then函数，使得代码依然不是太容易阅读。基于这个原因，ES7引入了 async/await，这是JavaScript异步编程的一个重大改进，提供了在不阻塞主线程的情况下使用同步代码实现异步访问资源的能力，并且使得代码逻辑更加清晰。
+
+<v-click at="1">
+
+## async
+
+根据MDN定义，async是一个通过异步执行并隐式返回 Promise 作为结果的函数。
+
+我们来看下它是如何返回 promise 的
+```js
+async function fn() {
+  return 1;
+}
+fn();
+// Promise {<fulfilled>: 1}
+```
+
+</v-click>
 
 ---
-案例分析
+
+## await
+
+```js {all|7|8|2|3|9|4|5|all}
+async function fn() {
+  console.log(1)
+  let a = await 3
+  console.log(a)
+  console.log(4)
+}
+console.log(0)
+fn()
+console.log(2)
+```
+
+<v-click at="9">
+
+执行到 await 3 时，会创建一个 Promise 对象，并执行，之后这个任务会被丢进微任务队列里，随后这个 async 函数就被暂停了，继续执行当前宏任务里的剩余部分，直到微任务检查点的执行才重新开始执行
+
+</v-click>
+
+---
+
+# 案例分析
+
+```js {all|1|2-4|5|3|all}
+console.log('0');
+setTimeout(function(){
+  console.log('2');
+},0)
+console.log('1');
+```
+<v-click at="6">
+
+```js {all|1|3-5|2-8|9-11|12-14|15-17|18|7|10|13|16|all}
+console.log(0);
+let p1 = new Promise(function (resolve) {
+  console.log(1);
+  resolve(4);
+  console.log(2);
+}).then(function (rt) {
+    console.log(rt);
+})
+let p2 = p1.then(
+  () => console.log(5)
+);
+let p3 = p1.then(
+  () => console.log(6)
+);
+setTimeout(function(){
+  console.log(7);
+})
+console.log(3);
+```
+
+</v-click>
+
+---
+
+```js{all|1|20|16-17|10-11|3-7|4-6|11-13|17-18|21|all}
+console.log(0);
+function getPromise() {
+  return new Promise(resolve => {
+    console.log(3);
+    resolve(6);
+    console.log(4);
+  })
+}
+async function f1() {
+  console.log(2);
+  const a = await getPromise();
+  console.log(a);
+  return 7;
+}
+async function f2() {
+  console.log(1);
+  const a = await f1();
+  console.log(a);  
+}
+f2();
+console.log(5);
+```
+
+---
+
+# vue的 nextTick
+
+将回调推迟到下一个 DOM 更新周期之后执行。在更改了一些数据以等待 DOM 更新后立即使用它。
+```js
+import { createApp, nextTick } from 'vue'
+
+const app = createApp({
+  setup() {
+    const message = ref('Hello!')
+    const changeMessage = async newMessage => {
+      message.value = newMessage
+      await nextTick()
+      console.log('Now DOM is updated')
+    }
+  }
+})
+```
+
+<v-click at="1">
+
+## 那么 Vue 是如何实现在 DOM 更新周期之后执行的呢？
+
+</v-click>
+
+---
+
+# 谢谢大家
+
+<style>
+h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+</style>
 
 
 ---
-vue的 nextTick
+src: ./additional_1.md
+---
