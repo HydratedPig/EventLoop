@@ -14,7 +14,7 @@ drawings:
 title: Event Loop
 ---
 
-# Event Loop
+# [Event Loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loops)
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
@@ -31,6 +31,15 @@ title: Event Loop
     <carbon-logo-github />
   </a>
 </div>
+
+<style>
+.slidev-layout h1  {
+  -webkit-text-fill-color: unset;
+}
+h1 a:hover{
+  color: white !important;
+}
+</style>
 
 ---
 
@@ -57,20 +66,23 @@ flowchart LR
 ```
 </v-click>
 
-<arrow v-click="4" x1="200" y1="360" x2="320" y2="266" color="#564" width="3" arrowSize="1" />
-<div v-click="4" class="ml-55 mt-9"><span class="text-3xl">?</span>如何插入一个任务</div>
+<v-click at="4">
 
-<style>
-h1 {
-  background-color: #2B90B6;
-  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
+```go
+package main
+import "fmt"
+func main() {
+	task1 := 1
+	task2 := task1 + 1
+	task3 := task2 + 1
+	fmt.Println("task4", task3, task2, task1)
 }
-</style>
+```
+
+</v-click>
+
+<arrow v-click="5" x1="200" y1="360" x2="320" y2="266" color="#564" width="3" arrowSize="1" />
+<div v-click="5" class="fixed top-80 left-60"><span class="text-3xl">?</span>如何插入一个任务</div>
 
 ---
 
@@ -93,26 +105,24 @@ func main() {
 }
 ```
 
-<div v-click="1">
-以上代码,引入了事件循环机制,线程在执行过程可以接收新的任务执行了,但是,任务都来自于线程内部,如果想接收其他线程发送过来的任务,这种模型是无法做到的
-</div>
+<v-click at="1">
 
-<style>
-h1 {
-  background-color: #2B90B6;
-  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
-}
-</style>
+这种设计模型有哪些优点呢?
+
+</v-click>
+<v-click at="2">
+
+- 引入**循环机制**,通过 while 循环,代码可以一直执行下去
+- 引入**事件**,可以接受用户的输入事件并输出信息<br/>
+这样子线程就可以"永动"了
+
+</v-click>
 
 ---
 
 # 消息队列
 
+刚才的示例中,引入了事件循环机制,线程在执行过程可以接收新的任务执行了,但是,任务都来自于线程内部,如果想接收其他线程发送过来的任务,这种模型是无法做到的<br/>
 除了引进事件循环,我们还需要引入消息队列,这样才能让浏览器动起来
 <br/>
 
@@ -121,332 +131,271 @@ h1 {
   <p v-click="1" class="w-full text-sm">《浏览器工作原理》 15-消息队列和事件循环</p>
 </div>
 
-<style>
-h1 {
-  background-color: #2B90B6;
-  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
+---
+
+# 处理 DOM 事件
+试想一下一个典型的场景,监听 DOM 树的变化,并处理相关的业务逻辑.
+
+<v-click at="1">
+
+```js
+function listener() {
+  console.log('body中子元素被修改');
 }
-</style>
-
----
-引入消息队列
-
----
-异步任务怎么办?
--> 引入微任务区分宏任务
-
----
-什么是宏任务
-
----
-什么是微任务
-
----
-回调地狱
-
-
----
-
-# Navigation
-
-Hover on the bottom-left corner to see the navigation's controls panel, [learn more](https://sli.dev/guide/navigation.html)
-
-### Keyboard Shortcuts
-
-|     |     |
-| --- | --- |
-| <kbd>right</kbd> / <kbd>space</kbd>| next animation or slide |
-| <kbd>left</kbd>  / <kbd>shift</kbd><kbd>space</kbd> | previous animation or slide |
-| <kbd>up</kbd> | previous slide |
-| <kbd>down</kbd> | next slide |
-
-<!-- https://sli.dev/guide/animations.html#click-animations -->
-<img
-  v-click
-  class="absolute -bottom-9 -left-7 w-80 opacity-50"
-  src="https://sli.dev/assets/arrow-bottom-left.svg"
-/>
-<p v-after class="absolute bottom-23 left-45 opacity-30 transform -rotate-10">Here!</p>
-
----
-layout: image-right
-image: https://source.unsplash.com/collection/94734566/1920x1080
----
-
-# Code
-
-Use code snippets and get the highlighting directly![^1]
-
-```ts {all|2|1-6|9|all}
-interface User {
-  id: number
-  firstName: string
-  lastName: string
-  role: string
+document.body.addEventListener(
+  'DOMSubtreeModified',
+  listener
+);
+function appendBody() {
+  appendBody.count++;
+  document.body.append(`text${appendBody.count}\n`);
 }
-
-function updateUser(id: number, update: User) {
-  const user = getUser(id)
-  const newUser = {...user, ...update}  
-  saveUser(id, newUser)
+appendBody.count = 0;
+function doOtherTasks() {
+  console.log('other tasks');
 }
+appendBody();
+appendBody();
+appendBody();
+doOtherTasks();
 ```
 
-<arrow v-click="3" x1="400" y1="420" x2="230" y2="330" color="#564" width="3" arrowSize="1" />
+</v-click>
 
-[^1]: [Learn More](https://sli.dev/guide/syntax.html#line-highlighting)
+---
 
-<style>
-.footnotes-sep {
-  @apply mt-20 opacity-10;
+# 如何权衡处理高优先级任务?
+
+显而易见，刚才例子中 listener 的业务逻辑会阻塞后续的任务执行。如果 listener 业务逻辑处理量大并且和后续任务关联性不大，那么我们没有必要让这些任务阻碍后续业务逻辑的执行，导致执行效率下降。但是如果我们将异步的消息添加到消息队列尾部，又会有新的问题，监控的时效性丢失。那么如何兼顾当前任务的时效性和监控的实时性呢？
+
+<v-click at="1">
+
+### 没错，微任务应运而生
+
+</v-click>
+
+<v-click at="2">
+
+我们把刚才的代码稍作更改
+
+</v-click>
+
+---
+
+```js
+function asyncListener() {
+  queueMicrotask(() => {
+    console.log('body中子元素被修改');
+  })
 }
-.footnotes {
-  @apply text-sm opacity-75;
+document.body.addEventListener(
+  'DOMSubtreeModified',
+  asyncListener
+);
+function appendBody() {
+  appendBody.count++;
+  document.body.append(`text${appendBody.count}\n`);
 }
-.footnote-backref {
-  display: none;
+appendBody.count = 0;
+function doOtherTasks() {
+  console.log('other tasks');
 }
-</style>
-
----
-
-# Components
-
-<div grid="~ cols-2 gap-4">
-<div>
-
-You can use Vue components directly inside your slides.
-
-We have provided a few built-in components like `<Tweet/>` and `<Youtube/>` that you can use directly. And adding your custom components is also super easy.
-
-```html
-<Counter :count="10" />
+appendBody();
+appendBody();
+appendBody();
+doOtherTasks();
 ```
+<v-click at="1">
 
-<!-- ./components/Counter.vue -->
-<Counter :count="10" m="t-4" />
+这样我们在宏任务执行过程中，将 DOM 变化的监听丢进微任务里，在当前宏任务结束之前执行微任务检查去执行微任务，这样既不会影响宏任务继续执行，又保障了监听的时效性，可谓是一举两得。
 
-Check out [the guides](https://sli.dev/builtin/components.html) for more.
-
-</div>
-<div>
-
-```html
-<Tweet id="1390115482657726468" />
-```
-
-<Tweet id="1390115482657726468" scale="0.65" />
-
-</div>
-</div>
-
+</v-click>
 
 ---
-class: px-20
----
 
-# Themes
+# 宏任务
 
-Slidev comes with powerful theming support. Themes can provide styles, layouts, components, or even configurations for tools. Switching between themes by just **one edit** in your frontmatter:
+- 渲染事件(如解析DOM、计算布局、绘制); 
+- 用戶交互事件(如鼠标点击、滚动⻚面、放大缩小等);
+- JavaScript脚本执行事件;
+- 网络请求完成、文件读写完成事件;
+- 定时任务（setTimeout、setInterval）。
 
-<div grid="~ cols-2 gap-2" m="-t-2">
+<v-click at="1">
 
-```yaml
----
-theme: default
----
-```
+为了协调这些任务有条不紊地在主线程上执行，⻚面进程引入了消息队列和事件循环机制，渲染进程内部会维护多个消息队列，比如延迟执行队列和普通的消息队列。然后主线程采用一个for循环，不断地从这些任务队列中取出任务并执行任务。我们把这些消息队列中的任务称为宏任务。
 
-```yaml
----
-theme: seriph
----
-```
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-default/01.png?raw=true">
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-seriph/01.png?raw=true">
-
-</div>
-
-Read more about [How to use a theme](https://sli.dev/themes/use.html) and
-check out the [Awesome Themes Gallery](https://sli.dev/themes/gallery.html).
+</v-click>
 
 ---
-preload: false
+
+# [WHATWG 规范定义](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model)
+宏任务执行过程
+- 从 taskQueue 中取出第一个 runnable task 称之为 oldestTask，并将它从 taskQueue 中移除
+- 将 oldestTask 设置为 Event Loop 当前正在执行的任务，并记录 taskStartTime
+- 执行 oldestTask
+- 执行微任务检查点
+- 任务完成后统计执行完成的时⻓等信息。
+
+<v-click at="1">
+
+我们刚才提过，作为宏任务放到消息队列中，无法保障时效性，除了无法保障时效性，我们也很难控制任务开始的时间。
+
+</v-click>
+
 ---
 
-# Animations
-
-Animations are powered by [@vueuse/motion](https://motion.vueuse.org/).
-
-```html
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }">
-  Slidev
-</div>
-```
-
-<div class="w-60 relative mt-6">
-  <div class="relative w-40 h-40">
-    <img
-      v-motion
-      :initial="{ x: 800, y: -100, scale: 1.5, rotate: -50 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-square.png"
-    />
-    <img
-      v-motion
-      :initial="{ y: 500, x: -100, scale: 2 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-circle.png"
-    />
-    <img
-      v-motion
-      :initial="{ x: 600, y: 400, scale: 2, rotate: 100 }"
-      :enter="final"
-      class="absolute top-0 left-0 right-0 bottom-0"
-      src="https://sli.dev/logo-triangle.png"
-    />
-  </div>
-
-  <div
-    class="text-5xl absolute top-14 left-40 text-[#2B90B6] -z-1"
-    v-motion
-    :initial="{ x: -80, opacity: 0}"
-    :enter="{ x: 0, opacity: 1, transition: { delay: 2000, duration: 1000 } }">
-    Slidev
-  </div>
-</div>
-
-<!-- vue script setup scripts can be directly used in markdown, and will only affects current page -->
-<script setup lang="ts">
-const final = {
-  x: 0,
-  y: 0,
-  rotate: 0,
-  scale: 1,
-  transition: {
-    type: 'spring',
-    damping: 10,
-    stiffness: 20,
-    mass: 2
+```js
+setTimeout(() => {
+  const id = setInterval(() => console.log('interval'), 0)
+  function timerCallback4(){
+    console.log(4);
   }
-}
-</script>
-
-<div
-  v-motion
-  :initial="{ x:35, y: 40, opacity: 0}"
-  :enter="{ y: 0, opacity: 1, transition: { delay: 3500 } }">
-
-[Learn More](https://sli.dev/guide/animations.html#motion)
-
-</div>
-
----
-
-# LaTeX
-
-LaTeX is supported out-of-box powered by [KaTeX](https://katex.org/).
-
-<br>
-
-Inline $\sqrt{3x-1}+(1+x)^2$
-
-Block
-$$
-\begin{array}{c}
-
-\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} &
-= \frac{4\pi}{c}\vec{\mathbf{j}}    \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
-
-\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
-
-\nabla \cdot \vec{\mathbf{B}} & = 0
-
-\end{array}
-$$
-
-<br>
-
-[Learn more](https://sli.dev/guide/syntax#latex)
-
----
-
-# Diagrams
-
-You can create diagrams / graphs from textual descriptions, directly in your Markdown.
-
-<div class="grid grid-cols-3 gap-10 pt-4 -mb-6">
-
-```mermaid {scale: 0.5}
-sequenceDiagram
-    Alice->John: Hello John, how are you?
-    Note over Alice,John: A typical interaction
-```
-
-```mermaid {theme: 'neutral', scale: 0.8}
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
-```
-
-```plantuml {scale: 0.7}
-@startuml
-
-package "Some Group" {
-  HTTP - [First Component]
-  [Another Component]
-}
-
-node "Other Groups" {
-  FTP - [Second Component]
-  [First Component] --> FTP
-}
-
-cloud {
-  [Example 1]
-}
-
-
-database "MySql" {
-  folder "This is my folder" {
-    [Folder 3]
+  function timerCallback3(){
+    console.log(3);
+    setTimeout(timerCallback4,0);
   }
-  frame "Foo" {
-    [Frame 4]
+  function timerCallback2(){
+    console.log(2);
+    setTimeout(timerCallback3,0);
   }
-}
+  function timerCallback(){
+    console.log(1);
+    setTimeout(timerCallback2,0);
+  }
+  setTimeout(timerCallback,0);
 
-
-[Another Component] --> [Example 1]
-[Example 1] --> [Folder 3]
-[Folder 3] --> [Frame 4]
-
-@enduml
+  setTimeout(() => clearInterval(id),100);
+},4000)
 ```
 
-</div>
+<v-click at="1">
 
-[Learn More](https://sli.dev/guide/syntax.html#diagrams)
+很明显 setTimeout 特别容易被插队
+
+</v-click>
+
+<v-click at="2">
+
+试想一下，如果中间被插入的任务执行时间过久的话，那么就会影响到后面任务的执行了。
+
+</v-click>
+
+---
+
+# 微任务
+
+在刚才提到的 [WHATWG](https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint) 规范中，我们可以知道**微任务就是一个需要异步执行的函数，执行时机是在主函数执行结束之后、当前宏任务结束之前。**
+
+<v-click at="1">
+
+微任务检查点的执行
+- 将 perform a microtask checkpoint 设置为 true
+- 如果 microtask queue 非空
+  - 微任务队列出队 oldestMicrotask 
+  - 当前事件循环执行的任务中执行 oldestMicrotask
+  - 再次执行微任务检查点
+  - 将事件循环当前运行的任务设置为空。
+- 将 perform a microtask checkpoint 设置为 false
+
+</v-click>
+
+<v-click at="2">
+
+现代浏览器中主要有 MutationObserver， Promise，queueMicrotask 产生微任务
+
+</v-click>
+
+---
+
+# 回调地狱
+```js
+function xhrFetch(data, resolve, reject) {
+  // ...
+}
+xhrFetch({},
+  function resolve() {
+    xhrFetch({},
+      function resolve2() {
+        xhrFetch({},
+          function resolve3() {
+            // ...
+          },
+          function reject3() {
+            // ...
+          })
+      },
+      function reject2() {
+        // ...
+      })
+  },
+  function reject1() {
+    // ...
+  })
+```
+
+---
+
+# Promise
+
+```js
+function xhrFetch(data) {
+  // ...
+}
+const x0 =  xhrFetch({});
+const res1 = x0.then(() => {
+  return xhrFetch({});
+})
+const res2 = res1.then(() => {
+  return xhrFetch({});
+})
+
+res2.catch(error => {
+  console.log(error);
+})
+```
+<v-click at="1">
+
+我们可以看到，引入 Promise 后代码变得线性，错误处理也可以被合并到一起
+
+</v-click>
+
+---
+
+# Promise 与微任务
+
+```js
+console.log(0);
+new Promise(resolve => {
+  console.log(1);
+  resolve(3);
+  console.log(2);
+}).then(res => {
+  console.log(res);
+})
+```
+<v-click at="1">
+
+众所周知，在 Promise/A+ 规范中：<br/>
+- then是在 promise 状态转为 fulfilled 或者 rejected 才会被调用
+- then 有两个参数 onFulfilled 和 onFulfilled
+- onFulfilled 或 onRejected 不能在执行上下文栈有任务时被调用
+
+</v-click>
+
+<v-click at="2">
+
+根据第三点，易知，```Promise.resolve().then()```需要在下一个任务执行的时机执行，那么这个任务既可以是宏任务，也可以是微任务，但是宏任务执行时机有着极大的不确定性，所以我们的 ```then()```中的参数在微任务中执行
+
+</v-click>
+
+---
+
+async await
+
+---
+案例分析
 
 
 ---
-layout: center
-class: text-center
----
-
-# Learn More
-
-[Documentations](https://sli.dev) · [GitHub](https://github.com/slidevjs/slidev) · [Showcases](https://sli.dev/showcases.html)
+vue的 nextTick
